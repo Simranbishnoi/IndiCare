@@ -217,6 +217,13 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-#custom project exclusion
+# Custom project exclusions
+
+# Environment variables
 .env
-data/raw/
+
+# Raw Synthea healthcare datasets
+data/raw/*.csv
+
+# Keep raw data directory structure
+!data/raw/.gitkeep
