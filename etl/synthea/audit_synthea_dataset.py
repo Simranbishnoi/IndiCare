@@ -12,7 +12,7 @@ Data Source:
     Synthea Synthetic Patient Generator
 
 Expected raw data location:
-    IndiCare/data/raw/
+    IndiCare/data/raw/synthea/
 
 Expected files:
     - patients.csv
@@ -71,7 +71,7 @@ def audit_synthea_dataset(data_path):
             print(f"\nERROR: Required file not found:")
             print(f"      {file}")
             print("\nPlease place the Synthea CSV files inside:")
-            print("      data/raw/")
+            print("      data/raw/synthea/")
             return
 
     patients = pd.read_csv(patients_file)
@@ -230,7 +230,7 @@ if __name__ == "__main__":
 
     # Find the IndiCare project root automatically.
     #
-    # Current file:
+    # Current file path:
     # IndiCare/
     #   etl/
     #     synthea/
@@ -242,7 +242,7 @@ if __name__ == "__main__":
 
     project_root = Path(__file__).resolve().parents[2]
 
-    # Raw Synthea data location
-    data_path = project_root / "data" / "raw"
+    # Raw Synthea data location updated to include /synthea folder
+    data_path = project_root / "data" / "raw" / "synthea"
 
     audit_synthea_dataset(data_path)
