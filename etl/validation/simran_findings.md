@@ -528,3 +528,56 @@ INCOME
 Derived later
 
 AGE → derive from BIRTHDATE when required.
+
+
+##encounter
+# ENCOUNTERS — Data Validation Findings
+
+## 1. Basic Structure
+
+The Encounters table contains **532,458 rows and 15 columns**.
+
+The table contains:
+- Encounter identifiers
+- Start and stop timestamps
+- Patient, organization, provider, and payer references
+- Encounter classification
+- Encounter codes and descriptions
+- Financial information
+- Reason codes and descriptions
+
+There are **6,458 unique patients** represented across the encounter records.
+
+---
+
+## 2. Primary Key Validation
+
+### `Id`
+
+- Total encounters: **532,458**
+- Unique `Id`: **Yes**
+- Missing `Id`: **0**
+
+### Finding
+
+`ENCOUNTERS.Id` is unique and non-null, so it is suitable as the **primary key** of the Encounters table.
+
+---
+
+## 3. Patient Foreign Key Validation
+
+### `PATIENT`
+
+- Missing `PATIENT`: **0**
+- Invalid patient references: **0**
+
+Every encounter contains a patient ID, and every `ENCOUNTERS.PATIENT` value exists in `PATIENTS.Id`.
+
+### Finding
+
+`ENCOUNTERS.PATIENT` can be used as a **foreign key referencing `PATIENTS.Id`**.
+
+The relationship is:
+
+```text
+PATIENTS 1 ─────────< ENCOUNTERS
