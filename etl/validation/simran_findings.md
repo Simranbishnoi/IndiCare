@@ -581,3 +581,96 @@ The relationship is:
 
 ```text
 PATIENTS 1 ─────────< ENCOUNTERS
+
+
+# CAREPLANS — Data Validation Findings
+
+## 1. Basic Structure
+
+The CarePlans table contains **26,149 rows and 9 columns**.
+
+The columns are:
+
+- `Id`
+- `START`
+- `STOP`
+- `PATIENT`
+- `ENCOUNTER`
+- `CODE`
+- `DESCRIPTION`
+- `REASONCODE`
+- `REASONDESCRIPTION`
+
+There are **6,333 unique patients** and **25,673 unique encounter references**.
+
+There are:
+
+- **39 unique CarePlan codes**
+- **39 unique CarePlan descriptions**
+- **62 unique reason codes**
+- **62 unique reason descriptions**
+
+---
+
+## 2. Missing Values
+
+The following missing values were identified:
+
+| Column | Missing values |
+|---|---:|
+| `Id` | 0 |
+| `START` | 0 |
+| `STOP` | 16,360 |
+| `PATIENT` | 0 |
+| `ENCOUNTER` | 0 |
+| `CODE` | 0 |
+| `DESCRIPTION` | 0 |
+| `REASONCODE` | 9,484 |
+| `REASONDESCRIPTION` | 9,484 |
+
+### Finding
+
+Missingness is concentrated in:
+
+- `STOP`
+- `REASONCODE`
+- `REASONDESCRIPTION`
+
+The missing `STOP` values are treated as missing data rather than automatically invalid data.
+
+The reason fields are investigated separately for consistency.
+
+---
+
+## 3. Primary Key Validation
+
+### `Id`
+
+Results:
+
+- Unique: **True**
+- Missing: **0**
+
+### Finding
+
+`CarePlans.Id` is unique and non-null and is therefore suitable as the **primary key**.
+
+---
+
+## 4. Patient Foreign Key Validation
+
+### `PATIENT`
+
+Results:
+
+- Missing `PATIENT`: **0**
+- Invalid patient references: **0**
+
+Every CarePlan contains a valid patient ID that exists in `PATIENTS.Id`.
+
+### Finding
+
+`CAREPLANS.PATIENT` can be represented as a foreign key referencing:
+
+```text
+PATIENTS.Id

@@ -1,7 +1,7 @@
 
 import pandas as pd
 
-'''
+
 # ============================================================
 # PATIENTS VALIDATION
 # ============================================================
@@ -12,7 +12,7 @@ print("=" * 60)
 
 # Load the raw Patients CSV.
 patients = pd.read_csv("data/raw/synthea/patients.csv")
-
+'''
 # Purpose: Check the size and source columns of the Patients dataset.
 print("Patients shape:", patients.shape)
 print("Patient columns:")
@@ -366,7 +366,7 @@ print("=" * 60)
 # Load the raw Encounters CSV.
 encounters = pd.read_csv("data/raw/synthea/encounters.csv")
 
-
+'''
 # ------------------------------------------------------------
 # 1. BASIC PROFILING
 # ------------------------------------------------------------
@@ -1103,4 +1103,549 @@ print(
 #
 # RAW DATA:
 # The raw Encounters CSV remains unchanged.
+# ============================================================
+'''
+# ============================================================
+# CAREPLANS VALIDATION
+# ============================================================
+
+print("\n" + "=" * 60)
+print("CAREPLANS VALIDATION")
+print("=" * 60)
+
+careplans = pd.read_csv("data/raw/synthea/careplans.csv")
+
+
+# ------------------------------------------------------------
+# 1. BASIC STRUCTURE
+# ------------------------------------------------------------
+# Purpose:
+# Understand the size, columns, data types, missing values,
+# and unique values in the CarePlans table.
+# ------------------------------------------------------------
+
+print("CarePlans shape:", careplans.shape)
+
+# OUTPUT:
+# CarePlans shape: (26149, 9)
+#
+# Finding:
+# The CarePlans table contains 26,149 rows and 9 columns.
+
+
+print("\nCarePlans columns:")
+print(careplans.columns.tolist())
+
+# OUTPUT:
+# ['Id', 'START', 'STOP', 'PATIENT', 'ENCOUNTER',
+#  'CODE', 'DESCRIPTION', 'REASONCODE', 'REASONDESCRIPTION']
+#
+# Finding:
+# CarePlans contains identifiers, dates, patient and encounter
+# references, care-plan codes/descriptions, and reason information.
+
+
+print("\nCarePlans info:")
+print(careplans.info())
+
+# OUTPUT:
+# Id                   26149 non-null
+# START                26149 non-null
+# STOP                  9789 non-null
+# PATIENT              26149 non-null
+# ENCOUNTER            26149 non-null
+# CODE                 26149 non-null
+# DESCRIPTION          26149 non-null
+# REASONCODE           16665 non-null
+# REASONDESCRIPTION    16665 non-null
+#
+# Finding:
+# START, PATIENT, ENCOUNTER, CODE, DESCRIPTION, and Id are
+# completely populated.
+#
+# STOP has 16,360 missing values.
+# REASONCODE and REASONDESCRIPTION each have 9,484 missing
+# values.
+
+
+print("\nCarePlans missing values:")
+print(careplans.isna().sum())
+
+# OUTPUT:
+# Id                       0
+# START                    0
+# STOP                 16360
+# PATIENT                  0
+# ENCOUNTER                0
+# CODE                     0
+# DESCRIPTION              0
+# REASONCODE            9484
+# REASONDESCRIPTION     9484
+#
+# Finding:
+# Missingness is concentrated in STOP and the two reason fields.
+
+
+print("\nCarePlans unique values:")
+print(careplans.nunique())
+
+# OUTPUT:
+# Id                   26149
+# START                13305
+# STOP                  4834
+# PATIENT               6333
+# ENCOUNTER            25673
+# CODE                    39
+# DESCRIPTION             39
+# REASONCODE              62
+# REASONDESCRIPTION       62
+#
+# Finding:
+# There are 26,149 CarePlan records and 6,333 unique patients.
+# There are 25,673 unique encounter references.
+# There are 39 CarePlan codes/descriptions and 62 reason
+# codes/descriptions.
+
+
+# ------------------------------------------------------------
+# 2. PRIMARY KEY VALIDATION
+# ------------------------------------------------------------
+# Purpose:
+# Check whether CarePlans.Id can uniquely identify every
+# CarePlan.
+# ------------------------------------------------------------
+
+print(
+    "Is CarePlan Id unique?",
+    careplans["Id"].is_unique
+)
+
+print(
+    "Missing CarePlan Id:",
+    careplans["Id"].isna().sum()
+)
+
+# OUTPUT:
+# Is CarePlan Id unique? True
+# Missing CarePlan Id: 0
+#
+# Finding:
+# CarePlans.Id is unique and non-null.
+# Therefore, Id is a valid primary-key candidate.
+
+
+# ------------------------------------------------------------
+# 3. PATIENT FOREIGN KEY VALIDATION
+# ------------------------------------------------------------
+# Purpose:
+# Verify that every CarePlan has a patient reference and that
+# every referenced patient exists in PATIENTS.Id.
+# ------------------------------------------------------------
+
+print(
+    "Missing CarePlan PATIENT:",
+    careplans["PATIENT"].isna().sum()
+)
+
+# OUTPUT:
+# Missing CarePlan PATIENT: 0
+#
+# Finding:
+# Every CarePlan contains a patient ID.
+
+
+print(
+    "Invalid CarePlan patient references:",
+    len(
+        careplans[
+            ~careplans["PATIENT"].isin(patients["Id"])
+        ]
+    )
+)
+
+# OUTPUT:
+# Invalid CarePlan patient references: 0
+#
+# Finding:
+# Every CarePlan patient ID exists in PATIENTS.Id.
+#
+# Therefore:
+# CAREPLANS.PATIENT → PATIENTS.Id
+# can be represented as a foreign-key relationship.
+
+
+# ------------------------------------------------------------
+# 4. ENCOUNTER FOREIGN KEY VALIDATION
+# ------------------------------------------------------------
+# Purpose:
+# Verify that every CarePlan has an encounter reference and
+# that every referenced encounter exists in ENCOUNTERS.Id.
+# ------------------------------------------------------------
+
+print(
+    "Missing CarePlan ENCOUNTER:",
+    careplans["ENCOUNTER"].isna().sum()
+)
+
+# OUTPUT:
+# Missing CarePlan ENCOUNTER: 0
+#
+# Finding:
+# Every CarePlan contains an encounter ID.
+
+
+print(
+    "Invalid CarePlan encounter references:",
+    len(
+        careplans[
+            ~careplans["ENCOUNTER"].isin(encounters["Id"])
+        ]
+    )
+)
+
+# OUTPUT:
+# Invalid CarePlan encounter references: 0
+#
+# Finding:
+# Every CarePlan encounter ID exists in ENCOUNTERS.Id.
+#
+# Therefore:
+# CAREPLANS.ENCOUNTER → ENCOUNTERS.Id
+# can be represented as a foreign-key relationship.
+
+
+# ------------------------------------------------------------
+# 5. START / STOP DATE VALIDATION
+# ------------------------------------------------------------
+# Purpose:
+# Validate CarePlan dates and check whether the chronological
+# relationship between START and STOP is valid.
+# ------------------------------------------------------------
+
+print("START examples:")
+print(careplans["START"].head().tolist())
+
+print("STOP examples:")
+print(careplans["STOP"].dropna().head().tolist())
+
+# OUTPUT:
+# START examples:
+# ['1993-08-18', '2002-07-31', '1990-05-11',
+#  '1995-10-07', '2016-10-31']
+#
+# STOP examples:
+# ['2017-01-02', '2021-01-29', '2021-02-27',
+#  '2026-06-04', '2020-06-05']
+#
+# Finding:
+# CarePlan START and STOP values use a date-only format:
+# YYYY-MM-DD.
+
+
+start_parsed = pd.to_datetime(
+    careplans["START"],
+    errors="coerce"
+)
+
+stop_parsed = pd.to_datetime(
+    careplans["STOP"],
+    errors="coerce"
+)
+
+print(
+    "Invalid CarePlan START values:",
+    start_parsed.isna().sum()
+)
+
+# OUTPUT:
+# Invalid CarePlan START values: 0
+#
+# Finding:
+# All START values can be successfully parsed as dates.
+
+
+print(
+    "Originally missing CarePlan STOP:",
+    careplans["STOP"].isna().sum()
+)
+
+# OUTPUT:
+# Originally missing CarePlan STOP: 16360
+#
+# Finding:
+# 16,360 CarePlans do not have a STOP date in the source data.
+# These values are missing, not automatically invalid.
+
+
+print(
+    "Invalid non-missing CarePlan STOP:",
+    (
+        careplans["STOP"].notna() &
+        stop_parsed.isna()
+    ).sum()
+)
+
+# OUTPUT:
+# Invalid non-missing CarePlan STOP: 0
+#
+# Finding:
+# None of the provided STOP dates are malformed.
+
+
+print(
+    "CarePlans with STOP before START:",
+    len(
+        careplans[
+            stop_parsed < start_parsed
+        ]
+    )
+)
+
+# OUTPUT:
+# CarePlans with STOP before START: 0
+#
+# Finding:
+# No CarePlan has a STOP date earlier than its START date.
+#
+# Provisional ETL decision:
+# START → DATE
+# STOP  → nullable DATE
+
+
+# ------------------------------------------------------------
+# 6. CAREPLAN CODE / DESCRIPTION VALIDATION
+# ------------------------------------------------------------
+# Purpose:
+# Determine whether each CarePlan CODE consistently maps to
+# one DESCRIPTION.
+# ------------------------------------------------------------
+
+careplan_code_description = (
+    careplans
+    .groupby("CODE")["DESCRIPTION"]
+    .nunique()
+)
+
+print(careplan_code_description)
+
+# OUTPUT:
+# All 39 CODE values have a result of 1.
+#
+# Finding:
+# Every CarePlan CODE maps to exactly one DESCRIPTION.
+
+
+careplan_description_code = (
+    careplans
+    .groupby("DESCRIPTION")["CODE"]
+    .nunique()
+)
+
+print(careplan_description_code)
+
+# OUTPUT:
+# All 39 DESCRIPTION values have a result of 1.
+#
+# Finding:
+# Every DESCRIPTION maps to exactly one CODE.
+#
+# Therefore:
+# CODE ↔ DESCRIPTION
+# is a one-to-one mapping in this dataset.
+
+
+# ------------------------------------------------------------
+# 7. REASON CODE / DESCRIPTION VALIDATION
+# ------------------------------------------------------------
+# Purpose:
+# Check whether REASONCODE and REASONDESCRIPTION have
+# consistent missingness.
+# ------------------------------------------------------------
+
+print(
+    "Reason code/description missing mismatch:",
+    len(
+        careplans[
+            careplans["REASONCODE"].isna() !=
+            careplans["REASONDESCRIPTION"].isna()
+        ]
+    )
+)
+
+# OUTPUT:
+# Reason code/description missing mismatch: 0
+#
+# Finding:
+# REASONCODE and REASONDESCRIPTION are always missing or
+# present together.
+#
+# There are 9,484 CarePlans where both reason fields are
+# missing.
+
+
+# ------------------------------------------------------------
+# 8. REASONCODE → REASONDESCRIPTION MAPPING
+# ------------------------------------------------------------
+# Purpose:
+# Determine whether every non-missing REASONCODE consistently
+# maps to one REASONDESCRIPTION.
+# ------------------------------------------------------------
+
+careplan_reason_description = (
+    careplans
+    .dropna(subset=["REASONCODE"])
+    .groupby("REASONCODE")["REASONDESCRIPTION"]
+    .nunique()
+)
+
+print(careplan_reason_description)
+
+# OUTPUT:
+# 62 REASONCODE values were found.
+# Every REASONCODE has a value of 1.
+#
+# Finding:
+# Every non-missing REASONCODE maps to exactly one
+# REASONDESCRIPTION.
+
+
+print(
+    "REASONCODEs with multiple descriptions:",
+    (careplan_reason_description > 1).sum()
+)
+
+# OUTPUT:
+# REASONCODEs with multiple descriptions: 0
+#
+# Finding:
+# No REASONCODE maps to multiple descriptions.
+
+
+# ------------------------------------------------------------
+# 9. CAREPLAN ↔ ENCOUNTER DATE INSPECTION
+# ------------------------------------------------------------
+# Purpose:
+# Inspect the relationship between CarePlan dates and the
+# dates of their associated encounters.
+#
+# We do NOT impose a strict rule that a CarePlan START must
+# fall inside the associated encounter period because the
+# source data does not establish such a business rule.
+# ------------------------------------------------------------
+
+encounter_dates = encounters[
+    ["Id", "START", "STOP"]
+].copy()
+
+encounter_dates["START"] = pd.to_datetime(
+    encounter_dates["START"],
+    errors="coerce",
+    utc=True
+)
+
+encounter_dates["STOP"] = pd.to_datetime(
+    encounter_dates["STOP"],
+    errors="coerce",
+    utc=True
+)
+
+careplans["START_PARSED"] = pd.to_datetime(
+    careplans["START"],
+    errors="coerce"
+)
+
+careplan_with_encounter = careplans.merge(
+    encounter_dates,
+    left_on="ENCOUNTER",
+    right_on="Id",
+    how="left",
+    suffixes=("_CAREPLAN", "_ENCOUNTER")
+)
+
+print(
+    careplan_with_encounter[
+        [
+            "ENCOUNTER",
+            "START_PARSED",
+            "START_ENCOUNTER",
+            "STOP_ENCOUNTER"
+        ]
+    ].head(10).to_string(index=False)
+)
+
+# OBSERVED OUTPUT:
+# CarePlan START dates were sometimes the same calendar date
+# as the associated encounter and sometimes the following
+# calendar date.
+#
+# Examples:
+#
+# CarePlan START     Encounter START
+# 1993-08-18         1993-08-18 18:21:08+00:00
+# 2002-07-31         2002-07-30 18:32:44+00:00
+# 1990-05-11         1990-05-11 10:52:28+00:00
+# 1995-10-07         1995-10-07 18:09:54+00:00
+# 2016-10-31         2016-10-30 18:45:28+00:00
+#
+# Finding:
+# CarePlan START may occur on the same calendar date as, or
+# after, the associated encounter date.
+#
+# No strict CarePlan START/STOP versus Encounter START/STOP
+# constraint was imposed because the source data does not
+# establish such a business rule.
+
+
+# ============================================================
+# CAREPLANS — PROVISIONAL COLUMN DECISIONS
+# ============================================================
+#
+# KEEP:
+# Id
+# START
+# STOP
+# PATIENT
+# ENCOUNTER
+# CODE
+# REASONCODE
+#
+# TRANSFORM:
+# START → DATE
+# STOP  → nullable DATE
+#
+# NORMALIZE / REFERENCE:
+# CODE + DESCRIPTION
+# REASONCODE + REASONDESCRIPTION
+#
+# PRIMARY KEY:
+# Id
+#
+# FOREIGN KEYS:
+# PATIENT   → PATIENTS.Id
+# ENCOUNTER → ENCOUNTERS.Id
+#
+# POTENTIAL LOOKUP TABLES:
+#
+# CAREPLAN_TYPES
+# ----------------
+# CODE (PK)
+# DESCRIPTION
+#
+# CAREPLAN_REASONS
+# ----------------
+# REASONCODE (PK)
+# REASONDESCRIPTION
+#
+# MISSING DATA:
+# STOP has 16,360 missing values.
+# REASONCODE and REASONDESCRIPTION have 9,484 missing
+# values each.
+#
+# These missing values are not automatically deleted.
+#
+# DATE RELATIONSHIP:
+# No strict CarePlan-to-Encounter date constraint is imposed.
+#
+# RAW DATA:
+# The raw CarePlans CSV remains unchanged.
 # ============================================================
